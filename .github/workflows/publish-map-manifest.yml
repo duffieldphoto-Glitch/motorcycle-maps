@@ -1,0 +1,61 @@
+name: Publish offline map manifest
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download map release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          gh release download "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" -p 'my_area.pmtiles' -D dist --clobber
+          test -s dist/my_area.pmtiles
+
+      - name: Verify file and generate manifest
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          tag = os.environ["GITHUB_REF_NAME"]
+          if not tag.startswith("map-"):
+              raise SystemExit("Release tag must start with map-")
+          path = Path("dist/my_area.pmtiles")
+          with path.open("rb") as f:
+              if f.read(8) != b"PMTiles\x03":
+                  raise SystemExit("Invalid PMTiles v3 header")
+              f.seek(0)
+              digest = hashlib.file_digest(f, "sha256").hexdigest()
+          data = {
+              "version": tag[4:],
+              "file_url": "https://github.com/" + os.environ["GITHUB_REPOSITORY"] + "/releases/download/" + tag + "/my_area.pmtiles",
+              "bytes": path.stat().st_size,
+              "sha256": digest
+          }
+          Path("southern-island.json").write_text(json.dumps(data, indent=2) + "\n")
+          print(json.dumps(data, indent=2))
+          PY
+
+      - name: Commit map manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add southern-island.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update offline map manifest"
+            git push origin HEAD:main
+          fi
