@@ -34,7 +34,8 @@ jobs:
 
   stage:
     # PRs test code only. No map is built or published on PRs.
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    # One development PR end-to-end source verification; temporary test condition.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.head_ref == 'feature/automated-map-staging')
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 35
