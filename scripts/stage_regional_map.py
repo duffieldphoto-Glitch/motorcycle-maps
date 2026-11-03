@@ -21,12 +21,12 @@ PILOT_BBOX = (-123.859863, 48.274054, -123.263168, 48.700478)
 MAX_ZOOM = 14
 DEFAULT_USER_AGENT = "MotorcycleNavigator-map-staging/0.1"
 REQUIRED_LAYERS = {"roads", "water", "places"}
-PMTILES_MAGIC = b"PMTiles\\x03"
+PMTILES_MAGIC = b"PMTiles\x03"
 MAX_REGIONAL_BYTES = 200 * 1024 * 1024
 
 
 def source_url(build_date: str) -> str:
-    if not re.fullmatch(r"20\\d{6}", build_date):
+    if not re.fullmatch(r"20\d{6}", build_date):
         raise ValueError("Build date must be YYYYMMDD")
     day = date.fromisoformat(f"{build_date[:4]}-{build_date[4:6]}-{build_date[6:]}")
     if day > datetime.now(timezone.utc).date() + timedelta(days=1):
