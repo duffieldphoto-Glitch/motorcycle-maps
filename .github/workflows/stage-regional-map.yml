@@ -68,6 +68,19 @@ jobs:
           python scripts/build_bc_names.py \
             --input staging/bc-gazetteer.csv \
             --output staging/regional_official_names.geojson
+      - name: Install Tippecanoe tools for source-driven vector map integration
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends tippecanoe
+          tippecanoe --version
+          tile-join --version
+      - name: Stage combined Protomaps and BC official names layers
+        run: |
+          python scripts/merge_official_names.py \
+            --base staging/my_area.pmtiles \
+            --names staging/regional_official_names.geojson \
+            --output-dir staging \
+            --pmtiles ./bin/pmtiles
       - name: Upload staged PMTiles for review
         uses: actions/upload-artifact@v4
         with:
@@ -79,5 +92,8 @@ jobs:
             staging/bc-gazetteer-info.json
             staging/regional_official_names.geojson
             staging/regional_official_names.report.json
+            staging/official_names.pmtiles
+            staging/my_area_with_official_names.pmtiles
+            staging/combined-map.report.json
           retention-days: 7
           if-no-files-found: error
