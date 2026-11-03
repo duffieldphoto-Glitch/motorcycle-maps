@@ -16,8 +16,9 @@ import subprocess
 import urllib.error
 import urllib.request
 
-# Same Greater Victoria/Sooke pilot bounds and zoom limit used in the current app.
-PILOT_BBOX = (-123.859863, 48.274054, -123.263168, 48.700478)
+# Expanded continuous southern Vancouver Island basemap: Sooke through Sidney.
+# Deliberately padded beyond town centres to cover adjoining municipalities.
+PILOT_BBOX = (-124.05, 48.26, -123.20, 48.76)
 MAX_ZOOM = 14
 DEFAULT_USER_AGENT = "MotorcycleNavigator-map-staging/0.1"
 REQUIRED_LAYERS = {"roads", "water", "places"}
@@ -91,7 +92,7 @@ def stage(build_date: str, destination: Path, cli: str) -> dict:
         output.unlink()
 
     bbox = ",".join(str(v) for v in PILOT_BBOX)
-    print(f"Staging Greater Victoria/Sooke {upstream} bbox={bbox}")
+    print(f"Staging Sooke–Sidney southern Vancouver Island {upstream} bbox={bbox}")
     run(cli, "extract", upstream, str(output),
         "--bbox=" + bbox, "--maxzoom=" + str(MAX_ZOOM))
     if not output.is_file() or output.stat().st_size < 127:
