@@ -36,8 +36,8 @@ jobs:
     # PRs test code only. No map is built or published on PRs.
     # On pull requests, run unit tests only. Staging occurs by manual dispatch
     # or on the weekly schedule once this workflow has been reviewed and merged.
-    # One-time end-to-end CI validation on this isolated draft branch.
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.head_ref == 'feature/automated-map-staging')
+    # PRs validate scripts only. Stage data on manual/weekly runs after review.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 35
