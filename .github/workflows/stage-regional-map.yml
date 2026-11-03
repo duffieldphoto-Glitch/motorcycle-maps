@@ -1,0 +1,106 @@
+name: Stage regional offline map
+
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "tests/**"
+      - ".github/workflows/stage-regional-map.yml"
+  workflow_dispatch:
+    inputs:
+      build_date:
+        description: "Protomaps YYYYMMDD build, or latest"
+        required: true
+        default: "latest"
+        type: string
+  schedule:
+    # Weekly staging check; only runs after this workflow reaches main.
+    - cron: "35 14 * * 2"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run regional staging unit tests
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+  stage:
+    # PRs test code only. No map is built or published on PRs.
+    # On pull requests, run unit tests only. Staging occurs by manual dispatch
+    # or on the weekly schedule once this workflow has been reviewed and merged.
+    # PRs validate scripts only. Stage data on manual/weekly runs after review.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned pmtiles CLI
+        run: |
+          mkdir -p bin
+          curl -fLsS --retry 3 \
+            https://github.com/protomaps/go-pmtiles/releases/download/v1.31.2/go-pmtiles_1.31.2_Linux_x86_64.tar.gz \
+            -o /tmp/go-pmtiles.tar.gz
+          tar -xzf /tmp/go-pmtiles.tar.gz -C bin
+          test -x bin/pmtiles
+      - name: Extract and validate regional offline map
+        env:
+          REQUESTED_BUILD_DATE: ${{ github.event.inputs.build_date || 'latest' }}
+        run: |
+          python scripts/stage_regional_map.py \
+            --date "$REQUESTED_BUILD_DATE" \
+            --output-dir staging \
+            --pmtiles-cli ./bin/pmtiles
+      - name: Stage current official BC geographical names
+        run: python scripts/fetch_bc_gazetteer.py --output-dir staging
+      - name: Generate regional official geographical names
+        run: |
+          python scripts/build_bc_names.py \
+            --input staging/bc-gazetteer.csv \
+            --output staging/regional_official_names.geojson
+      - name: Audit official regional name quality
+        run: |
+          python scripts/audit_official_names.py \
+            --source staging/regional_official_names.geojson \
+            --output staging/regional_official_names.audit.json
+      - name: Install Tippecanoe tools for source-driven vector map integration
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends tippecanoe
+          tippecanoe --version
+          command -v tile-join
+      - name: Stage combined Protomaps and BC official names layers
+        run: |
+          python scripts/merge_official_names.py \
+            --base staging/my_area.pmtiles \
+            --names staging/regional_official_names.geojson \
+            --output-dir staging \
+            --pmtiles ./bin/pmtiles
+      - name: Upload staged PMTiles for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: southern-island-staged-${{ github.run_number }}
+          path: |
+            staging/my_area.pmtiles
+            staging/build-info.json
+            staging/bc-gazetteer.csv
+            staging/bc-gazetteer-info.json
+            staging/regional_official_names.geojson
+            staging/regional_official_names.report.json
+            staging/regional_official_names.audit.json
+            staging/official_names.pmtiles
+            staging/my_area_with_official_names.pmtiles
+            staging/combined-map.report.json
+          retention-days: 7
+          if-no-files-found: error
