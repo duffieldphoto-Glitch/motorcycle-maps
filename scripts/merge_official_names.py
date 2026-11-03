@@ -15,6 +15,8 @@ import subprocess
 from stage_regional_map import inspect_metadata, MAX_REGIONAL_BYTES, PMTILES_MAGIC
 
 EXTRA_LAYER = "official_names"
+NAME_ATTRIBUTION = "Contains information licensed under the Open Government Licence - British Columbia"
+COMBINED_ATTRIBUTION = "© OpenStreetMap contributors; Protomaps; " + NAME_ATTRIBUTION
 REQUIRED_LAYERS = {"roads", "water", "places", EXTRA_LAYER}
 MAX_COMBINED_BYTES = MAX_REGIONAL_BYTES + 10 * 1024 * 1024
 
@@ -71,7 +73,8 @@ def stage_combined(
     run(
         tippecanoe, "-f", "-Z10", "-z14", "-r1",
         "--no-feature-limit", "--no-tile-size-limit",
-        "-l", EXTRA_LAYER, "-o", str(official_tiles),
+        "-l", EXTRA_LAYER, "-A", NAME_ATTRIBUTION,
+        "-o", str(official_tiles),
         str(names_geojson)
     )
     assert_pmtiles(official_tiles)
@@ -83,7 +86,8 @@ def stage_combined(
     # Tippecanoe tile-join combines *overlapping vector tile layers*.
     # go-pmtiles 'merge' only joins disjoint tile spatial coverage.
     run(
-        tile_join, "-f", "-o", str(combined),
+        tile_join, "-f", "-A", COMBINED_ATTRIBUTION,
+        "-o", str(combined),
         str(base), str(official_tiles)
     )
     assert_pmtiles(combined)
@@ -110,6 +114,7 @@ def stage_combined(
         "names_source_file": names_geojson.name,
         "official_name_feature_count": len(source["features"]),
         "name_layer": EXTRA_LAYER,
+        "attribution": COMBINED_ATTRIBUTION,
         "combined_file": combined.name,
         "bytes": combined.stat().st_size,
         "sha256": digest.hexdigest(),
