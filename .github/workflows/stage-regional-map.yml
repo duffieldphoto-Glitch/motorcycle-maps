@@ -33,11 +33,10 @@ jobs:
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
   stage:
-    # PRs test code only. No map is built or published on PRs.
-    # On pull requests, run unit tests only. Staging occurs by manual dispatch
-    # or on the weekly schedule once this workflow has been reviewed and merged.
-    # PRs validate scripts only. Stage data on manual/weekly runs after review.
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    # Stage the expanded Sooke–Sidney map on its isolated development PR.
+    # Other PRs still run unit tests only. Staging uploads a temporary review
+    # artifact and never publishes a map release or updates the public manifest.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.head_ref == 'feature/greater-victoria-sooke-sidney-basemap' && github.event.pull_request.head.repo.full_name == github.repository)
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 35

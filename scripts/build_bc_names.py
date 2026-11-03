@@ -12,8 +12,9 @@ import json
 from pathlib import Path
 import unicodedata
 
-# Match the current regional offline PMTiles package.
-PILOT_BBOX = (-123.859863, 48.274054, -123.263168, 48.700478)
+# Match the proposed Sooke–Sidney basemap extract exactly, so official names
+# cannot be excluded simply because the map footprint was expanded.
+PILOT_BBOX = (-124.05, 48.26, -123.20, 48.76)
 REQUIRED_HEADERS = {"Official Name", "Feature Type", "LatDD", "LongDD"}
 
 
