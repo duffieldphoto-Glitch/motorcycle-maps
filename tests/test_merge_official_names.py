@@ -47,7 +47,7 @@ class CombinedMapTests(unittest.TestCase):
                 if args[0] == "pmtiles" and args[1] == "show":
                     base_layers = ["roads", "water", "places"]
                     extra = ["official_names"]
-                    if "official_names.pmtiles" in args[2]:
+                    if Path(args[2]).name == "official_names.pmtiles":
                         layer_ids = extra
                     elif "my_area_with_official_names" in args[2]:
                         layer_ids = base_layers + extra
@@ -109,7 +109,7 @@ class CombinedMapTests(unittest.TestCase):
                     fake_pmtiles(Path(args[args.index("-o") + 1]))
                     return ""
                 if args[1] == "show":
-                    layers = ["official_names"] if "official_names" in args[2] else [
+                    layers = ["official_names"] if Path(args[2]).name == "official_names.pmtiles" else [
                         "roads", "water", "official_names"
                     ]
                     return json.dumps({"vector_layers": [{"id": n} for n in layers]})
