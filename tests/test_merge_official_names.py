@@ -72,6 +72,11 @@ class CombinedMapTests(unittest.TestCase):
                              ["tippecanoe", "pmtiles"])
             self.assertTrue(any(cmd[0] == "tile-join" for cmd in commands))
             self.assertIn("--no-feature-limit", commands[0])
+            self.assertIn("OpenStreetMap", result["attribution"])
+            self.assertIn("British Columbia", result["attribution"])
+            joined = next(cmd for cmd in commands if cmd[0] == "tile-join")
+            self.assertIn("-A", joined)
+            self.assertEqual(joined[joined.index("-A") + 1], result["attribution"])
 
     def test_rejects_invalid_and_empty_name_collection(self):
         with tempfile.TemporaryDirectory() as temp:
