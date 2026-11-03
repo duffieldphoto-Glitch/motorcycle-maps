@@ -34,8 +34,9 @@ jobs:
 
   stage:
     # PRs test code only. No map is built or published on PRs.
-    # One development PR end-to-end source verification; temporary test condition.
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.head_ref == 'feature/automated-map-staging')
+    # On pull requests, run unit tests only. Staging occurs by manual dispatch
+    # or on the weekly schedule once this workflow has been reviewed and merged.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 35
