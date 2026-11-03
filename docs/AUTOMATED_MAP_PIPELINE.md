@@ -32,8 +32,11 @@ or individual label overrides in the Android app.
      British Columbia metadata before staging the CSV.
    - Validate UTF-8 and CSV structure; record the file checksum, version
      metadata, source URL, date, and attribution.
-   - **The Gazetteer is not yet converted into map tiles.** Merely fetching
-     names does not make them visible in the Android app.
+   - The full regional subset (771 official names in the current pilot) is
+     converted automatically into vector tile layer \`official_names\`.
+     A single staged PMTiles package combines this layer with Protomaps
+     roads and water via Tippecanoe tile-join. Rendering still needs Android
+     preview verification and does not affect the published map.
 
 3. Later: evaluate Natural Resources Canada's Canadian Geographical Names
    Database plus BC road/status information, with licence and update reviews.
@@ -45,8 +48,11 @@ and a weekly schedule (after workflow is merged into \`main\`) execute
 the staging pipeline.
 
 The staging job downloads a pinned PMTiles command-line tool, extracts the
-regional basemap, pulls the current Gazetteer CSV, and uploads all files to
-a **temporary GitHub Actions artifact** for review. It never pushes a
+regional basemap, pulls the current Gazetteer CSV, converts regional official
+names to GeoJSON and vector tiles, then builds a single combined PMTiles
+archive with Tippecanoe tile-join. It verifies required original and new
+vector layers and stores SHA-256 plus source credits. All outputs remain a
+**temporary GitHub Actions artifact** for review. It never pushes a
 new manifest or creates a public GitHub Release.
 
 The existing published map, its manifest, and phone downloads are untouched.
@@ -70,14 +76,16 @@ Before a new map reaches phones:
 - Inspect the current regional PMTiles vector tile for a named reservoir such
   as Humpback Reservoir, distinguishing missing source data from label
   collisions or zoom filters.
-- Convert the **full** regional set of suitable authoritative names (not
-  individual patches) into a validated, deduplicated map layer.
+- [Completed in staging] Convert the **full** regional set of authoritative
+  official name points (not individual patches) into a validated vector layer;
+  merge it with the basemap in a single regional PMTiles archive.
 - Review priority/conflict handling between OSM names, official BC Gazetteer,
   and Indigenous place names, including correct character handling.
-- Decide whether names become an extra PMTiles vector layer or a separate
-  versioned offline package; prefer one atomic map update if practical.
-- Ensure water polygons, style filters, symbol fonts and collision rules are
-  compatible. Check a variety of known features in the pilot area.
+- [Completed in staging] Choose a **single combined PMTiles archive** so
+  Android can continue using its atomic and integrity-checked map updater.
+- Review the separate Android source-driven label-preview draft PR,
+  checking water polygons, style filters, symbols, duplicate labels and
+  collision rules across multiple named features, not only one reservoir.
 - Verify rendering, coverage, offline mode, data licences, source credits, file
   size and download fallback on a physical Android device.
 - Only then release a new map asset, allowing the existing release workflow
@@ -85,3 +93,14 @@ Before a new map reaches phones:
 
 **Access note:** Geographic data and road connectivity do not establish
 motorcycle access, forestry road permissions, gates or traffic direction.
+
+## Verified combined-map staging
+
+A fully merged preview PMTiles with 771 official name points and all original
+basemap vector layers was created successfully in GitHub Actions:
+https://github.com/duffieldphoto-Glitch/motorcycle-maps/actions/runs/41561332132
+
+The enriched archive is 7,862,101 bytes. Its tile metadata credits both
+OpenStreetMap contributors and the Province of British Columbia.
+Detailed results: [MERGED_MAP_VALIDATION.md](MERGED_MAP_VALIDATION.md).
+The preview is **not** published or installed on users' phones.
