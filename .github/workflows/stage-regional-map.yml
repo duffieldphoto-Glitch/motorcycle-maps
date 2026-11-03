@@ -59,6 +59,8 @@ jobs:
             --date "$REQUESTED_BUILD_DATE" \
             --output-dir staging \
             --pmtiles-cli ./bin/pmtiles
+      - name: Stage current official BC geographical names
+        run: python scripts/fetch_bc_gazetteer.py --output-dir staging
       - name: Upload staged PMTiles for review
         uses: actions/upload-artifact@v4
         with:
@@ -66,5 +68,7 @@ jobs:
           path: |
             staging/my_area.pmtiles
             staging/build-info.json
+            staging/bc-gazetteer.csv
+            staging/bc-gazetteer-info.json
           retention-days: 7
           if-no-files-found: error
