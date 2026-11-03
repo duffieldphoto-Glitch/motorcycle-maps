@@ -1,0 +1,6 @@
+/staging/
+__pycache__/
+*.py[cod]
+*.pmtiles
+.env
+.env.*
