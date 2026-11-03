@@ -43,8 +43,21 @@ The manifest has the shape:
 
 ## Progress
 
-- [x] Android can show a manually imported offline PMTiles map.
-- [x] Repository configured for manifest generation on release publish.
-- [ ] Upload the regional `my_area.pmtiles` as a GitHub release asset.
-- [ ] Confirm workflow creates `southern-island.json`.
-- [ ] Configure the Android downloader with the stable manifest URL.
+- [x] Android displays imported offline PMTiles and can check for map updates.
+- [x] Published regional `my_area.pmtiles` release `map-2026-11-01`.
+- [x] Manifest workflow generated `southern-island.json` with real integrity values.
+- [x] Prototype regional map operates in airplane mode on a Samsung phone.
+- [x] Step 7 staging pipeline passes unit tests and an end-to-end automated OSM/Protomaps extraction.
+- [x] Official BC Gazetteer automatically discovered and processed: 41,061 records, 771 names within current pilot bounds.
+- [ ] Review and integrate source-driven official names into offline map layers without hard-coded locations.
+- [ ] Compare names and road labels on Samsung and resolve data/collision/duplicate issues.
+- [ ] Approve a new regional map release after all offline regression tests pass.
+
+## Step 7 — Automated map inputs (development draft)
+
+**[Step 7 draft pull request](https://github.com/duffieldphoto-Glitch/motorcycle-maps/pull/1)** contains the map staging scripts and GitHub Actions checks. Pull requests run fast unit tests; manual/weekly staging generates checked archives and geographical-name GeoJSON **for review**, not direct publication.
+
+The current Android app and published map manifest are unchanged. See
+[`docs/AUTOMATED_MAP_PIPELINE.md`](docs/AUTOMATED_MAP_PIPELINE.md) and
+[`docs/STAGING_TEST_RESULTS.md`](docs/STAGING_TEST_RESULTS.md) for status,
+source provenance and limits. No manually entered map-name fallbacks are used.
